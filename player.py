@@ -3,6 +3,7 @@ class Player:
         self.row = row
         self.col = col
         self.char = char
+        self.numMoves = 0
         self.cratesMoved = 0
 
     def moveUp(self):
@@ -34,6 +35,15 @@ class Player:
 
     def setChar(self, newChar):
         self.char = newChar
+
+    def incrementMoves(self):
+        self.numMoves += 1
+
+    def decrementMoves(self):
+        self.numMoves -= 1
+
+    def getScore(self):
+        return self.numMoves
 
     def crateInPosition(self):
         self.cratesMoved += 1

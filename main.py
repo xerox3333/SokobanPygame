@@ -1,5 +1,6 @@
 import pygame
 import sys
+from menu import Menu
 from maze import Maze
 from player import Player
 from pygame.locals import *
@@ -41,7 +42,13 @@ FPSCLOCK = pygame.time.Clock()
 DISPLAYSURF = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption('Sokoban v 0.01')
 BASICFONT = pygame.font.SysFont('monospace', 18)
+SCOREFONT = pygame.font.SysFont('arial', 28)
+SCOREFONT.set_bold(True)
 
+# Create main menu
+menu_items = ('Press enter to start', '')
+mainMenu = Menu(DISPLAYSURF, menu_items, BGCOLOR, BASICFONT, TEXTCOLOR)
+mainMenu.run()
 
 def movePlayerRight():
     nextPos = maze.getCharAtPos(player.getRow(), player.getCol() + 1)
@@ -54,15 +61,18 @@ def movePlayerRight():
             if nextCratePos == "#" or nextCratePos == "C":
                 # path is obstructed
                 movePlayerLeft()
+                player.decrementMoves()
             else:
                 # path is clear to push crate
                 if nextPos == "C":
                     maze.clearAtPos(player.getRow(), player.getCol() + 1)
                     maze.setCharAtPos(player.getRow(), player.getCol() + 2, "C")
                     #maze.placeCrate(player.getRow(), player.getCol() + 2)
+                    player.incrementMoves()
             print "Crate found"
         else:
             print "Empty space found"
+            player.incrementMoves()
 
         maze.clearAtPos(player.getRow(), player.getCol())
         player.moveRight()
@@ -84,15 +94,18 @@ def movePlayerLeft():
             if nextCratePos == "#" or nextCratePos == "C":
                 # path is obstructed
                 movePlayerRight()
+                player.decrementMoves()
             else:
                 # path is clear to push crate
                 if nextPos == "C":
                     maze.clearAtPos(player.getRow(), player.getCol() - 1)
                     maze.setCharAtPos(player.getRow(), player.getCol() - 2, "C")
                     #maze.placeCrate(player.getRow(), player.getCol() - 2)
+                    player.incrementMoves()
             print "Crate found"
         else:
             print "Empty space found"
+            player.incrementMoves()
 
         maze.clearAtPos(player.getRow(), player.getCol())
         player.moveLeft()
@@ -114,15 +127,18 @@ def movePlayerUp():
             if nextCratePos == "#" or nextCratePos == "C":
                 # path is obstructed
                 movePlayerDown()
+                player.decrementMoves()
             else:
                 # path is clear to push crate
                 if nextPos == "C":
                     maze.clearAtPos(player.getRow() - 1, player.getCol())
                     maze.setCharAtPos(player.getRow() - 2, player.getCol(), "C")
                     #maze.placeCrate(player.getRow() - 2, player.getCol())
+                    player.incrementMoves()
             print "Crate found"
         else:
             print "Empty space found"
+            player.incrementMoves()
 
         maze.clearAtPos(player.getRow(), player.getCol())
         player.moveUp()
@@ -144,15 +160,17 @@ def movePlayerDown():
             if nextCratePos == "#" or nextCratePos == "C":
                 # path is obstructed
                 movePlayerUp()
+                player.decrementMoves()
             else:
                 # path is clear to push crate
                 if nextPos == "C":
                     maze.clearAtPos(player.getRow() + 1, player.getCol())
                     maze.setCharAtPos(player.getRow() + 2, player.getCol(), "C")
-                    #maze.placeCrate(player.getRow() + 2, player.getCol())
+                    player.incrementMoves()
             print "Crate found"
         else:
             print "Empty space found"
+            player.incrementMoves()
 
         maze.clearAtPos(player.getRow(), player.getCol())
         player.moveDown()
@@ -161,6 +179,21 @@ def movePlayerDown():
 
     print maze.toString()
     print player.toString()
+
+
+def generateRandomCrate():
+    """ Generates a random X and Y and set the charater at that position to C
+    none
+    generateRandomCrate()
+    NoneType"""
+    randX = maze.getRandX()
+    randY = maze.getRandY()
+    randPos = maze.getCharAtPos(randX, randY)
+    while randPos == "C" or randPos == "#":
+        randX = maze.getRandX()
+        randY = maze.getRandY()
+
+    maze.setCharAtPos(randX, randY, "C")
 
 
 def drawMap(maze):
@@ -183,6 +216,9 @@ def main():
     maze.placePlayer('*', 1, 1)
     print maze.toString()
     drawMap(maze)
+    generateRandomCrate()
+
+    redraw = False
 
     while True:
         # Check for input
@@ -200,8 +236,6 @@ def main():
                     movePlayerDown()
                 elif event.key == K_SPACE:
                     restart()
-                else:
-                    pass
             redraw = True
 
         DISPLAYSURF.fill(BGCOLOR)
@@ -210,14 +244,15 @@ def main():
             mapSurf = drawMap(maze)
             redraw = False
 
-        mapSurfRect = mapSurf.get_rect()
-        mapSurfRect.center = ((WIDTH / 2), (HEIGHT / 2))
+            mapSurfRect = mapSurf.get_rect()
+            mapSurfRect.center = ((WIDTH / 2), (HEIGHT / 2))
 
-        # Draw the map on the DISPLAYSURF object.
-        DISPLAYSURF.blit(mapSurf, mapSurfRect)
+            score  = SCOREFONT.render("No of Moves: " + str(player.getScore()), 1, WHITE)
+            DISPLAYSURF.blit(mapSurf, mapSurfRect)
+            DISPLAYSURF.blit(score, ((WIDTH - 220), (HEIGHT - 40)))
 
-        pygame.display.update()  # draw DISPLAYSURF to the screen.
-        FPSCLOCK.tick()
+            pygame.display.update()  # draw DISPLAYSURF to the screen.
+            FPSCLOCK.tick()
 
 
 def restart():
